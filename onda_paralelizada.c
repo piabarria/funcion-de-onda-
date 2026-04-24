@@ -137,6 +137,28 @@ void initialize(double *u_prev,double *u_curr)
     }
 }
 
+void save_slice(double *u, int step)
+{
+    FILE *f;
+    char filename[50];
+
+    sprintf(filename, "output_%d.dat", step);
+    f = fopen(filename, "w");
+
+    int k = NZ/2;  // plano central en z
+
+    for(int i=0;i<NX;i++)
+    {
+        for(int j=0;j<NY;j++)
+        {
+            fprintf(f,"%d %d %lf\n", i, j, u[IDX(i,j,k)]);
+        }
+        fprintf(f,"\n");
+    }
+
+    fclose(f);
+}
+
 /* main */
 int main()
 {
@@ -149,16 +171,17 @@ int main()
     initialize(u_prev,u_curr);
 
     for(int t=0;t<NSTEPS;t++)
-    {
-        step(u_prev,u_curr,u_next);
+{
+    step(u_prev,u_curr,u_next);
 
-        /* rotación de punteros */
-        double *tmp = u_prev;
-        u_prev = u_curr;
-        u_curr = u_next;
-        u_next = tmp;
-    }
+    if(t % 10 == 0)  // guarda cada 10 pasos
+        save_slice(u_curr, t);
 
+    double *tmp = u_prev;
+    u_prev = u_curr;
+    u_curr = u_next;
+    u_next = tmp;
+}
     printf("Simulación terminada\n");
 
     free(u_prev);
